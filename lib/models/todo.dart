@@ -4,6 +4,9 @@ class Todo {
   String? description;
   bool isCompleted;
   DateTime? dueDate;
+  String priority; // New: "Low", "Medium", or "High"
+  String category; // New: "Work", "Personal", or "School"
+  bool isRecurring; // New: Is the task recurring?
 
   Todo({
     this.id,
@@ -11,6 +14,9 @@ class Todo {
     this.description,
     this.isCompleted = false,
     this.dueDate,
+    this.priority = "Medium", // Default priority
+    this.category = "Personal", // Default category
+    this.isRecurring = false, // Default is not recurring
   });
 
   // Convert a Todo into a Map
@@ -21,6 +27,9 @@ class Todo {
       'description': description,
       'isCompleted': isCompleted ? 1 : 0,
       'dueDate': dueDate?.millisecondsSinceEpoch,
+      'priority': priority,
+      'category': category,
+      'isRecurring': isRecurring ? 1 : 0,
     };
   }
 
@@ -31,9 +40,12 @@ class Todo {
       title: map['title'],
       description: map['description'],
       isCompleted: map['isCompleted'] == 1,
-      dueDate: map['dueDate'] != null 
-        ? DateTime.fromMillisecondsSinceEpoch(map['dueDate']) 
-        : null,
+      dueDate: map['dueDate'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['dueDate'])
+          : null,
+      priority: map['priority'] ?? "Medium",
+      category: map['category'] ?? "Personal",
+      isRecurring: map['isRecurring'] == 1,
     );
   }
 
@@ -44,6 +56,9 @@ class Todo {
     String? description,
     bool? isCompleted,
     DateTime? dueDate,
+    String? priority,
+    String? category,
+    bool? isRecurring,
   }) {
     return Todo(
       id: id ?? this.id,
@@ -51,6 +66,9 @@ class Todo {
       description: description ?? this.description,
       isCompleted: isCompleted ?? this.isCompleted,
       dueDate: dueDate ?? this.dueDate,
+      priority: priority ?? this.priority,
+      category: category ?? this.category,
+      isRecurring: isRecurring ?? this.isRecurring,
     );
   }
 }

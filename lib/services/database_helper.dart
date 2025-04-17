@@ -1,5 +1,4 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import '../models/todo.dart';
 
@@ -11,11 +10,6 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    
-    // Initialize the database factory
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-    
     _database = await _initDB('todos.db');
     return _database!;
   }
@@ -24,7 +18,12 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 3, // Incremented version for schema changes
+      onCreate: _createDB,
+      onUpgrade: _upgradeDB,
+    );
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -34,20 +33,25 @@ class DatabaseHelper {
         title TEXT NOT NULL,
         description TEXT,
         isCompleted INTEGER NOT NULL,
-        dueDate INTEGER
+        dueDate INTEGER,
+        priority TEXT NOT NULL,
+        category TEXT NOT NULL,
+        isRecurring INTEGER NOT NULL
       )
     ''');
   }
 
-  // CRUD Operations
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE todos ADD COLUMN isRecurring INTEGER NOT NULL DEFAULT 0');
+    }
+  }
 
-  // Create: Insert a todo
   Future<int> insertTodo(Todo todo) async {
     final db = await database;
     return await db.insert('todos', todo.toMap());
   }
 
-  // Read: Get all todos
   Future<List<Todo>> getTodos() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('todos', orderBy: 'dueDate ASC');
@@ -57,22 +61,6 @@ class DatabaseHelper {
     });
   }
 
-  // Read: Get a specific todo
-  Future<Todo?> getTodo(int id) async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'todos',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-
-    if (maps.isNotEmpty) {
-      return Todo.fromMap(maps.first);
-    }
-    return null;
-  }
-
-  // Update: Update a todo
   Future<int> updateTodo(Todo todo) async {
     final db = await database;
     return await db.update(
@@ -83,7 +71,6 @@ class DatabaseHelper {
     );
   }
 
-  // Delete: Delete a todo
   Future<int> deleteTodo(int id) async {
     final db = await database;
     return await db.delete(
@@ -91,11 +78,5 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
-  }
-
-  // Close the database
-  Future close() async {
-    final db = await database;
-    db.close();
   }
 }
