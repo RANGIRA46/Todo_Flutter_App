@@ -4,9 +4,10 @@ class Todo {
   String? description;
   bool isCompleted;
   DateTime? dueDate;
-  String priority; // New: "Low", "Medium", or "High"
-  String category; // New: "Work", "Personal", or "School"
-  bool isRecurring; // New: Is the task recurring?
+  DateTime? actionTime; // NEW: Time for the action to take place
+  String priority; // For task priority (e.g., Low, Medium, High)
+  String category; // For task category (e.g., Work, Personal, School)
+  bool isRecurring; // For recurring tasks (e.g., Everyday)
 
   Todo({
     this.id,
@@ -14,12 +15,13 @@ class Todo {
     this.description,
     this.isCompleted = false,
     this.dueDate,
-    this.priority = "Medium", // Default priority
-    this.category = "Personal", // Default category
-    this.isRecurring = false, // Default is not recurring
+    this.actionTime, // NEW: Initialize actionTime
+    this.priority = "Medium",
+    this.category = "Personal",
+    this.isRecurring = false,
   });
 
-  // Convert a Todo into a Map
+  // Convert a Todo to a Map (for database storage)
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -27,13 +29,14 @@ class Todo {
       'description': description,
       'isCompleted': isCompleted ? 1 : 0,
       'dueDate': dueDate?.millisecondsSinceEpoch,
+      'actionTime': actionTime?.millisecondsSinceEpoch, // NEW: Add actionTime to the map
       'priority': priority,
       'category': category,
       'isRecurring': isRecurring ? 1 : 0,
     };
   }
 
-  // Create a Todo from a Map
+  // Create a Todo from a Map (for database retrieval)
   factory Todo.fromMap(Map<String, dynamic> map) {
     return Todo(
       id: map['id'],
@@ -43,32 +46,12 @@ class Todo {
       dueDate: map['dueDate'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['dueDate'])
           : null,
+      actionTime: map['actionTime'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['actionTime'])
+          : null, // NEW: Parse actionTime
       priority: map['priority'] ?? "Medium",
       category: map['category'] ?? "Personal",
       isRecurring: map['isRecurring'] == 1,
-    );
-  }
-
-  // Clone method for creating copies when updating
-  Todo copy({
-    int? id,
-    String? title,
-    String? description,
-    bool? isCompleted,
-    DateTime? dueDate,
-    String? priority,
-    String? category,
-    bool? isRecurring,
-  }) {
-    return Todo(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      isCompleted: isCompleted ?? this.isCompleted,
-      dueDate: dueDate ?? this.dueDate,
-      priority: priority ?? this.priority,
-      category: category ?? this.category,
-      isRecurring: isRecurring ?? this.isRecurring,
     );
   }
 }
