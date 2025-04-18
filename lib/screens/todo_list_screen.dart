@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/todo.dart'; // Updated import for Todo model
-import '../services/database_helper.dart'; // Updated import for DatabaseHelper
-import 'todo_form_screen.dart'; // Corrected import for the form screen
+import '../models/todo.dart';
+import '../services/database_helper.dart';
+import 'todo_form_screen.dart';
 
 class TodoListScreen extends StatefulWidget {
   const TodoListScreen({Key? key}) : super(key: key);
@@ -97,7 +97,34 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
   Widget _buildTaskTile(BuildContext context, Todo todo) {
     return ListTile(
-      title: Text(todo.title),
+      leading: !todo.isRecurring
+          ? Checkbox(
+              value: todo.isCompleted,
+              onChanged: (bool? value) async {
+                final updatedTodo = Todo(
+                  id: todo.id,
+                  title: todo.title,
+                  description: todo.description,
+                  isCompleted: value ?? false,
+                  dueDate: todo.dueDate,
+                  actionTime: todo.actionTime,
+                  priority: todo.priority,
+                  category: todo.category,
+                  isRecurring: todo.isRecurring,
+                );
+                await DatabaseHelper.instance.updateTodo(updatedTodo);
+                _refreshTodos();
+              },
+            )
+          : null, // No checkbox for recurring tasks
+      title: Text(
+        todo.title,
+        style: TextStyle(
+          decoration: todo.isCompleted
+              ? TextDecoration.lineThrough
+              : TextDecoration.none,
+        ),
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -105,7 +132,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
           if (todo.dueDate != null)
             Text('Due: ${DateFormat.yMMMd().format(todo.dueDate!)}'),
           if (todo.actionTime != null)
-            Text('Time: ${DateFormat.Hm().format(todo.actionTime!)}'), // NEW: Display actionTime
+           if (todo.actionTime != null)
+          Text('Time: ${TimeOfDay.fromDateTime(todo.actionTime!).format(context)}'),
           if (todo.isRecurring)
             const Text(
               'Recurring Task (Everyday)',
@@ -116,50 +144,17 @@ class _TodoListScreenState extends State<TodoListScreen> {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Edit Icon Button
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () {
-              _editTask(context, todo);
-            },
+            onPressed: () => _editTask(context, todo),
           ),
-          // Delete Icon Button
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Delete Task'),
-                  content: const Text('Are you sure you want to delete this task?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _deleteTask(todo.id!);
-                      },
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
-              );
-            },
+            onPressed: () => _deleteTask(todo.id!),
           ),
         ],
       ),
-      onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TodoFormScreen(todo: todo),
-          ),
-        );
-        if (result == true) _refreshTodos();
-      },
+      onTap: () => _editTask(context, todo),
     );
   }
 }

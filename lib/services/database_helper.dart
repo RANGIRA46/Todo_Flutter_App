@@ -20,9 +20,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // Increment the database version
+      version: 3, // Increment database version
       onCreate: _createDB,
-      onUpgrade: _upgradeDB, // Handle schema upgrades
+      onUpgrade: _upgradeDB,
     );
   }
 
@@ -32,9 +32,9 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         description TEXT,
-        isCompleted INTEGER NOT NULL,
+        isCompleted INTEGER NOT NULL DEFAULT 0, -- NEW COLUMN: isCompleted
         dueDate INTEGER,
-        actionTime INTEGER, -- NEW COLUMN: actionTime
+        actionTime INTEGER,
         priority TEXT NOT NULL,
         category TEXT NOT NULL,
         isRecurring INTEGER NOT NULL
@@ -43,9 +43,9 @@ class DatabaseHelper {
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Add the actionTime column if upgrading from version 1 to 2
-      await db.execute('ALTER TABLE todos ADD COLUMN actionTime INTEGER');
+    if (oldVersion < 3) {
+      // Add isCompleted column for marking tasks as completed
+      await db.execute('ALTER TABLE todos ADD COLUMN isCompleted INTEGER DEFAULT 0');
     }
   }
 

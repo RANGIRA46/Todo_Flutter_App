@@ -2,9 +2,9 @@ class Todo {
   final int? id;
   String title;
   String? description;
-  bool isCompleted;
+  bool isCompleted; // Tracks completion status
   DateTime? dueDate;
-  DateTime? actionTime; // Time for the action to take place
+  DateTime? actionTime;
   String priority;
   String category;
   bool isRecurring;
@@ -13,7 +13,7 @@ class Todo {
     this.id,
     required this.title,
     this.description,
-    this.isCompleted = false,
+    this.isCompleted = false, // Default to not completed
     this.dueDate,
     this.actionTime,
     this.priority = "Medium",
@@ -26,7 +26,7 @@ class Todo {
       'id': id,
       'title': title,
       'description': description,
-      'isCompleted': isCompleted ? 1 : 0,
+      'isCompleted': isCompleted ? 1 : 0, // Store as integer value
       'dueDate': dueDate?.millisecondsSinceEpoch,
       'actionTime': actionTime?.millisecondsSinceEpoch,
       'priority': priority,
@@ -40,7 +40,7 @@ class Todo {
       id: map['id'],
       title: map['title'],
       description: map['description'],
-      isCompleted: map['isCompleted'] == 1,
+      isCompleted: map['isCompleted'] == 1, // Retrieve as boolean
       dueDate: map['dueDate'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['dueDate'])
           : null,
