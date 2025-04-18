@@ -20,20 +20,21 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3, // Incremented version for schema changes
+      version: 2, // Increment the database version
       onCreate: _createDB,
-      onUpgrade: _upgradeDB,
+      onUpgrade: _upgradeDB, // Handle schema upgrades
     );
   }
 
   Future<void> _createDB(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE todos(
+      CREATE TABLE todos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         description TEXT,
         isCompleted INTEGER NOT NULL,
         dueDate INTEGER,
+        actionTime INTEGER, -- NEW COLUMN: actionTime
         priority TEXT NOT NULL,
         category TEXT NOT NULL,
         isRecurring INTEGER NOT NULL
@@ -42,8 +43,9 @@ class DatabaseHelper {
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 3) {
-      await db.execute('ALTER TABLE todos ADD COLUMN isRecurring INTEGER NOT NULL DEFAULT 0');
+    if (oldVersion < 2) {
+      // Add the actionTime column if upgrading from version 1 to 2
+      await db.execute('ALTER TABLE todos ADD COLUMN actionTime INTEGER');
     }
   }
 
@@ -54,11 +56,8 @@ class DatabaseHelper {
 
   Future<List<Todo>> getTodos() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('todos', orderBy: 'dueDate ASC');
-
-    return List.generate(maps.length, (i) {
-      return Todo.fromMap(maps[i]);
-    });
+    final result = await db.query('todos', orderBy: 'dueDate ASC');
+    return result.map((json) => Todo.fromMap(json)).toList();
   }
 
   Future<int> updateTodo(Todo todo) async {
